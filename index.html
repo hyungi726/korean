@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세종대왕의 훈민정음 공방</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 가독성이 뛰어난 깔끔한 고딕 폰트 (Pretendard & Noto Sans KR) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- Tone.js (효과음 합성) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #090d16; /* 깊고 어두운 밤하늘 슬레이트 배경 */
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+            color: #f8fafc;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        /* 집현전 다크 카드 스타일 */
+        .jiphyeon-card {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(245, 158, 11, 0.08);
+            border-radius: 24px;
+        }
+        /* 버튼 입체 효과 */
+        .primary-btn {
+            transition: all 0.15s ease;
+            box-shadow: 0 5px 0 #b45309;
+        }
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 #b45309;
+        }
+        .primary-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+        /* 선택지 및 조합 조각 버튼 */
+        .option-btn {
+            transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: #1e293b;
+            border: 1.5px solid #334155;
+            box-shadow: 0 4px 0 #0f172a;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: #273549;
+            border-color: #f59e0b;
+            transform: translateY(-2px);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #0f172a;
+        }
+        .option-btn.selected {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #fbbf24;
+            color: #fde68a;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.35s ease-in-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop-in 0.25s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+
+    <!-- 메인 게임 컨테이너 -->
+    <div id="app" class="w-full max-w-2xl jiphyeon-card p-6 sm:p-8 relative">
+
+        <!-- 1. 시작 화면 -->
+        <div id="start-screen" class="text-center space-y-6 py-2">
+            <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-amber-500/30">
+                <span>🌙 밤의 집현전 비밀 프로젝트</span>
+            </div>
+
+            <div class="space-y-2">
+                <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+                    세종대왕의 <span class="text-amber-400">훈민정음</span> 공방
+                </h1>
+                <p class="text-slate-300 text-sm sm:text-base">
+                    과학적인 한글의 창제 원리를 풀고 암호를 해독하라!
+                </p>
+            </div>
+
+            <!-- 세종대왕 다크 테마 일러스트 -->
+            <div class="flex justify-center py-2">
+                <div class="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-slate-800/80 border-2 border-amber-500/40 flex items-center justify-center shadow-lg">
+                    <svg viewBox="0 0 200 200" class="w-28 h-28 sm:w-32 sm:h-32">
+                        <!-- 익선관 -->
+                        <path d="M55 75 C55 35, 145 35, 145 75 Z" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+                        <rect x="50" y="68" width="100" height="12" rx="6" fill="#1e293b"/>
+                        <path d="M52 60 Q30 50 35 72 Q45 75 55 70 Z" fill="#0f172a"/>
+                        <path d="M148 60 Q170 50 165 72 Q155 75 145 70 Z" fill="#0f172a"/>
+                        <!-- 얼굴 -->
+                        <circle cx="100" cy="105" r="42" fill="#fde68a"/>
+                        <!-- 눈썹 & 눈 -->
+                        <path d="M76 92 Q84 87 92 92" stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M108 92 Q116 87 124 92" stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M78 102 Q84 96 90 102" stroke="#0f172a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                        <path d="M110 102 Q116 96 122 102" stroke="#0f172a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                        <!-- 수염 -->
+                        <path d="M88 122 Q100 130 112 122" stroke="#dc2626" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M75 125 Q100 115 125 125" stroke="#475569" stroke-width="2.5" fill="none"/>
+                        <path d="M92 135 L100 165 L108 135 Z" fill="#475569"/>
+                        <!-- 곤룡포 -->
+                        <path d="M40 190 C40 150, 160 150, 160 190 Z" fill="#dc2626"/>
+                        <circle cx="100" cy="178" r="12" fill="#fbbf24" stroke="#fef08a" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 강화된 게임 규칙 안내 -->
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 text-left space-y-3">
+                <h2 class="text-amber-400 font-bold text-base sm:text-lg flex items-center gap-2">
+                    <span>📜</span> 공방 도전 규칙 (필독!)
+                </h2>
+                <ul class="space-y-2 text-slate-200 text-sm sm:text-base leading-relaxed">
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-amber-400 font-bold">1.</span>
+                        <span><strong>등불 생명력 (🏮 3개):</strong> 오답을 고르면 등불이 하나씩 꺼집니다. 등불이 모두 꺼지면 처음부터 다시 도전해야 해요!</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-amber-400 font-bold">2.</span>
+                        <span><strong>글자 직접 조립 미션:</strong> 객관식 문제뿐만 아니라, <strong>자음·모음 조각을 직접 조합</strong>하여 목표 글자를 만들어야 합니다.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-amber-400 font-bold">3.</span>
+                        <span><strong>비밀 암호 획득:</strong> 총 8단계의 시련을 모두 통과하면 <strong>ZEP 월드 암호 안내</strong>가 열립니다!</span>
+                    </li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="primary-btn w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-lg sm:text-xl px-10 py-4 rounded-2xl cursor-pointer">
+                집현전 공방 입장하기
+            </button>
+        </div>
+
+        <!-- 2. 게임 플레이 화면 -->
+        <div id="game-screen" class="hidden space-y-5">
+            <!-- 상단 상태바: 단계, 생명력(등불), 콤보, 점수 -->
+            <div class="flex flex-wrap justify-between items-center gap-2 bg-slate-800/90 px-4 py-3 rounded-2xl border border-slate-700">
+                <div class="flex items-center gap-2.5">
+                    <span id="stage-badge" class="bg-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold px-2.5 py-1 rounded-lg">1단계</span>
+                    <span id="question-counter" class="text-slate-200 font-semibold text-sm sm:text-base">1 / 8</span>
+                </div>
+
+                <!-- 생명력 (등불 3개) -->
+                <div class="flex items-center gap-1.5 bg-slate-900 px-3 py-1 rounded-xl border border-slate-700" title="남은 기회">
+                    <span class="text-xs text-slate-400 mr-1">기회</span>
+                    <span id="life-1" class="text-lg transition-all">🏮</span>
+                    <span id="life-2" class="text-lg transition-all">🏮</span>
+                    <span id="life-3" class="text-lg transition-all">🏮</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="combo-badge" class="hidden bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-2 py-0.5 rounded-md">🔥 2연속!</span>
+                    <span class="text-sm sm:text-base font-bold text-slate-300">점수 <span id="score-display" class="text-amber-400 text-lg ml-1">0</span></span>
+                </div>
+            </div>
+
+            <!-- 진행률 게이지 -->
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-amber-400 h-full transition-all duration-300" style="width: 12.5%"></div>
+            </div>
+
+            <!-- 문제 카드 -->
+            <div id="question-box" class="bg-slate-800/60 p-5 sm:p-6 rounded-2xl border border-slate-700 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span id="stage-title" class="text-xs sm:text-sm font-bold text-amber-400 tracking-wide"></span>
+                    <span id="mission-type-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300">원리 추리</span>
+                </div>
+
+                <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-white leading-snug"></h2>
+
+                <!-- 시각 그래픽 / 조립 작업대 영역 -->
+                <div id="visual-box" class="flex flex-col justify-center items-center py-4 px-3 bg-slate-900/90 rounded-xl border border-slate-700 min-h-[140px]">
+                    <!-- 동적 렌더링 -->
+                </div>
+
+                <!-- 힌트 박스 -->
+                <div class="flex items-center gap-2 text-xs sm:text-sm text-amber-200/90 bg-amber-500/10 border border-amber-500/20 py-2 px-3.5 rounded-xl">
+                    <span>💡</span>
+                    <span id="hint-text"></span>
+                </div>
+            </div>
+
+            <!-- 입력 영역 A: 객관식 선택지 -->
+            <div id="choices-grid" class="grid grid-cols-2 gap-3 sm:gap-4"></div>
+
+            <!-- 입력 영역 B: 글자 조립 퍼즐 컨트롤 (조립 미션일 때만 표시) -->
+            <div id="builder-controls" class="hidden space-y-4">
+                <div class="text-center text-xs sm:text-sm text-slate-400">
+                    아래 조각들을 순서대로 눌러 위 작업대에 올려놓으세요!
+                </div>
+                <div id="builder-pieces" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5"></div>
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <button onclick="clearBuilder()" class="option-btn py-3.5 rounded-xl font-bold text-slate-300 hover:text-white cursor-pointer">
+                        ↺ 조각 비우기
+                    </button>
+                    <button onclick="submitBuilder()" class="primary-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3.5 rounded-xl cursor-pointer">
+                        ✨ 조립 완성 확인!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 정답 해설 모달 -->
+        <div id="feedback-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-900 border-2 border-amber-500/60 rounded-3xl max-w-md w-full p-6 text-center space-y-5 animate-pop shadow-2xl">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/20 text-4xl border border-emerald-500/30">
+                    ✨
+                </div>
+                <div class="space-y-1">
+                    <h3 id="feedback-title" class="text-2xl font-extrabold text-emerald-400">정답입니다!</h3>
+                    <p id="bonus-text" class="text-xs font-bold text-amber-400"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-left space-y-1.5">
+                    <p class="text-xs font-bold text-amber-400">📜 세종대왕의 창제 원리</p>
+                    <p id="feedback-explanation" class="text-sm sm:text-base text-slate-200 leading-relaxed"></p>
+                </div>
+                <button onclick="nextQuestion()" class="primary-btn w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-lg py-3.5 rounded-xl cursor-pointer">
+                    다음 단계로 진행 👉
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. 게임 오버 모달 (등불 3개 소진 시) -->
+        <div id="gameover-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-900 border-2 border-rose-500/60 rounded-3xl max-w-md w-full p-6 text-center space-y-5 animate-pop shadow-2xl">
+                <div class="text-5xl">🕯️</div>
+                <div class="space-y-2">
+                    <h3 class="text-2xl font-extrabold text-rose-400">등불이 모두 꺼졌습니다!</h3>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        아쉽지만 공방의 불이 꺼져 훈민정음 창제를 잠시 멈추게 되었어요. 원리를 다시 떠올리며 처음부터 도전해 볼까요?
+                    </p>
+                </div>
+                <button onclick="restartGame()" class="primary-btn w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-lg py-3.5 rounded-xl cursor-pointer">
+                    처음부터 다시 도전하기 🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. 최종 클리어 화면 -->
+        <div id="result-screen" class="hidden text-center space-y-6 py-2 animate-pop">
+            <div class="inline-block bg-emerald-500/15 text-emerald-300 px-4 py-1.5 rounded-full text-sm font-bold border border-emerald-500/30">
+                🎉 모든 창제 원리 해독 성공!
+            </div>
+
+            <div class="space-y-1">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    훈민정음 공방 <span class="text-amber-400">완벽 클리어!</span>
+                </h2>
+                <p id="rank-title" class="text-amber-300 font-bold text-base sm:text-lg"></p>
+            </div>
+
+            <!-- 요청하신 ZEP 복귀 암호 안내 배너 (가장 눈에 띄게 강조) -->
+            <div class="bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 p-6 rounded-2xl border-2 border-amber-400 shadow-lg space-y-2">
+                <div class="text-xs font-extrabold tracking-widest text-amber-300 uppercase">
+                    🔑 미션 완료 암호 안내
+                </div>
+                <p class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    "zep으로 돌아가 <span class="text-amber-300 underline decoration-2 underline-offset-4">훈민정음</span>을 입력하시오"
+                </p>
+                <div class="pt-2">
+                    <button onclick="copyPassword()" id="copy-btn" class="bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/50 text-xs sm:text-sm font-bold px-4 py-2 rounded-xl cursor-pointer transition">
+                        📋 암호 '훈민정음' 복사하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 최종 점수 요약 -->
+            <div class="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700">
+                    <div class="text-slate-400 text-xs">최종 점수</div>
+                    <div class="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1"><span id="final-score">0</span>점</div>
+                </div>
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700">
+                    <div class="text-slate-400 text-xs">남은 등불</div>
+                    <div id="final-lives" class="text-xl sm:text-2xl mt-1">🏮🏮🏮</div>
+                </div>
+            </div>
+
+            <!-- 훈민정음 우수성 핵심 정리 -->
+            <div class="bg-slate-800/60 p-5 rounded-2xl border border-slate-700 text-left space-y-2.5">
+                <h3 class="font-bold text-amber-400 text-base flex items-center gap-2">
+                    <span>🏆</span> 우리가 밝혀낸 훈민정음의 우수성
+                </h3>
+                <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300">
+                    <li>• <strong>상형의 원리:</strong> 발음 기관(ㄱ,ㄴ,ㅁ,ㅅ,ㅇ)과 하늘·땅·사람(ㆍ,ㅡ,ㅣ)의 모양을 본떴습니다.</li>
+                    <li>• <strong>가획의 원리:</strong> 소리가 세질 때마다 획을 하나씩 더해 체계적으로 글자를 늘렸습니다.</li>
+                    <li>• <strong>합성의 원리:</strong> 기본 글자들을 서로 결합해 세상의 모든 말소리를 적을 수 있습니다.</li>
+                </ul>
+            </div>
+
+            <button onclick="restartGame()" class="option-btn text-slate-300 hover:text-white font-bold text-sm px-6 py-3 rounded-xl cursor-pointer">
+                처음부터 다시 플레이하기 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 사운드 엔진 (Tone.js) ---
+        let audioReady = false;
+        let synth;
+
+        function initAudio() {
+            if (!audioReady && typeof Tone !== 'undefined') {
+                Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                audioReady = true;
+            }
+        }
+
+        function playSound(type) {
+            if (!audioReady) return;
+            try {
+                if (type === 'click') synth.triggerAttackRelease("G4", "32n");
+                else if (type === 'piece') synth.triggerAttackRelease("E5", "32n");
+                else if (type === 'correct') synth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+                else if (type === 'wrong') synth.triggerAttackRelease(["C3", "F#3"], "8n");
+                else if (type === 'fanfare') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.12);
+                    synth.triggerAttackRelease("G5", "8n", now + 0.24);
+                    synth.triggerAttackRelease("C6", "4n", now + 0.36);
+                }
+            } catch (e) {}
+        }
+
+        // --- 8단계 복합 문제 데이터 (객관식 + 직접 글자 조립 퍼즐 혼합) ---
+        const questions = [
+            // 1단계: 상형의 원리 (객관식)
+            {
+                type: "choice",
+                stage: "1단계 · 상형의 원리",
+                badge: "발음 기관 추리",
+                question: "혀뿌리가 목구멍을 막는 모양을 본떠 만든 기본 자음은 무엇일까요?",
+                hint: "'그~' 소리를 낼 때 혀의 뒷부분이 직각처럼 꺾이는 모양이에요!",
+                visualSVG: `
+                    <svg viewBox="0 0 260 110" class="w-56 h-24">
+                        <path d="M40 25 Q145 25 145 85" stroke="#475569" stroke-width="10" fill="none" stroke-linecap="round"/>
+                        <path d="M55 40 L130 40 L130 90" stroke="#fbbf24" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="155" y="65" font-size="14" fill="#fde68a" font-weight="bold">혀뿌리 모양</text>
+                    </svg>
+                `,
+                choices: ["ㄱ", "ㄴ", "ㅁ", "ㅅ"],
+                answer: "ㄱ",
+                explanation: "'ㄱ'은 혀뿌리가 목구멍을 막는 옆모습을 그대로 본뜬 글자입니다. 발음할 때 혀의 모양을 눈으로 볼 수 있게 만든 과학적인 설계예요!"
+            },
+            // 2단계: 상형의 원리 (객관식)
+            {
+                type: "choice",
+                stage: "1단계 · 상형의 원리",
+                badge: "발음 기관 추리",
+                question: "네모난 입술 모양에서 'ㅁ', 뾰족한 이 모양에서 'ㅅ'을 본떴습니다. 그렇다면 둥근 목구멍 모양을 본뜬 글자는?",
+                hint: "목구멍은 동그랗게 구멍이 뚫려 있어요!",
+                visualSVG: `
+                    <div class="flex items-center justify-center gap-6 text-center">
+                        <div>
+                            <div class="w-12 h-12 mx-auto border-4 border-amber-400 flex items-center justify-center font-bold text-xl text-white">ㅁ</div>
+                            <div class="text-xs text-slate-400 mt-1">입술 모양</div>
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 mx-auto flex items-center justify-center font-bold text-3xl text-amber-400">ㅅ</div>
+                            <div class="text-xs text-slate-400 mt-1">이 모양</div>
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 mx-auto rounded-full border-4 border-dashed border-emerald-400 flex items-center justify-center font-bold text-xl text-emerald-300">?</div>
+                            <div class="text-xs text-emerald-300 mt-1">목구멍 모양</div>
+                        </div>
+                    </div>
+                `,
+                choices: ["ㅇ", "ㄴ", "ㄹ", "ㅈ"],
+                answer: "ㅇ",
+                explanation: "목구멍의 둥근 모양을 본떠 'ㅇ'을 만들었습니다. 이렇게 'ㄱ, ㄴ, ㅁ, ㅅ, ㅇ' 다섯 글자가 모든 자음의 뿌리가 됩니다."
+            },
+            // 3단계: 가획의 원리 (직접 조립 퍼즐 #1)
+            {
+                type: "builder",
+                stage: "2단계 · 가획의 원리",
+                badge: "글자 조립 미션",
+                question: "가획의 원리를 이용해 거센소리 'ㅌ'을 직접 조립해 보세요!",
+                hint: "기본 자음 'ㄴ'에 가로획을 두 번 더해야 소리가 가장 세진 'ㅌ'이 됩니다.",
+                targetDisplay: "목표 글자: [ ㅌ ] 만들기",
+                pieces: ["ㄴ", "ㄱ", "획(ㅡ)", "획(ㅡ)", "ㅇ"],
+                correctSequence: ["ㄴ", "획(ㅡ)", "획(ㅡ)"],
+                resultPreview: "ㄴ + ㅡ + ㅡ = ㅌ",
+                explanation: "훌륭합니다! 'ㄴ → ㄷ → ㅌ'처럼 기본 글자에 획을 하나씩 더할 때마다 소리가 거세지는 '가획의 원리' 덕분에 글자 모양만 봐도 소리의 세기를 알 수 있어요."
+            },
+            // 4단계: 가획의 원리 (객관식 심화)
+            {
+                type: "choice",
+                stage: "2단계 · 가획의 원리",
+                badge: "규칙 추리",
+                question: "다음 중 기본 자음에 획을 더해 만든 '가획자' 짝꿍이 잘못 연결된 것은 무엇일까요?",
+                hint: "기본 모양이 서로 닮지 않은 짝꿍을 찾아보세요!",
+                visualSVG: `
+                    <div class="text-sm sm:text-base text-slate-200 space-y-1 font-semibold">
+                        <div>소리 세기: <span class="text-slate-400">약함</span> ➡ <span class="text-amber-300">조금 셈</span> ➡ <span class="text-rose-400">아주 셈</span></div>
+                        <div class="text-xs text-slate-400">같은 발음 기관에서 나는 소리는 모양도 비슷해요!</div>
+                    </div>
+                `,
+                choices: [
+                    "ㅁ ➡ ㅂ ➡ ㅍ (입술 소리)",
+                    "ㅅ ➡ ㅈ ➡ ㅊ (잇소리)",
+                    "ㅇ ➡ ㆆ ➡ ㅎ (목구멍 소리)",
+                    "ㄱ ➡ ㄴ ➡ ㅁ (혀뿌리 소리)"
+                ],
+                answer: "ㄱ ➡ ㄴ ➡ ㅁ (혀뿌리 소리)",
+                explanation: "'ㄱ, ㄴ, ㅁ'은 각각 혀뿌리, 혀끝, 입술 모양을 본뜬 서로 다른 기본 자음입니다! 'ㄱ'에서 획을 더하면 'ㅋ'이 된답니다."
+            },
+            // 5단계: 천지인 모음 원리 (객관식)
+            {
+                type: "choice",
+                stage: "3단계 · 천지인의 원리",
+                badge: "자연 철학 추리",
+                question: "훈민정음의 모음은 둥근 하늘(ㆍ), 평평한 땅(ㅡ), 그리고 서 있는 ( ? )의 모양을 본떴습니다.",
+                hint: "하늘과 땅 사이에 똑바로 서 있는 존재 'ㅣ'는 무엇일까요?",
+                visualSVG: `
+                    <div class="flex items-center justify-around w-full max-w-sm">
+                        <div class="text-center">
+                            <div class="text-3xl font-extrabold text-amber-400">ㆍ</div>
+                            <div class="text-xs text-slate-300 mt-1">하늘 (천)</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-extrabold text-emerald-400">ㅡ</div>
+                            <div class="text-xs text-slate-300 mt-1">땅 (지)</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-extrabold text-sky-400">ㅣ</div>
+                            <div class="text-xs text-sky-300 font-bold mt-1">? (인)</div>
+                        </div>
+                    </div>
+                `,
+                choices: ["사람", "큰 산", "소나무", "궁궐"],
+                answer: "사람",
+                explanation: "하늘(ㆍ), 땅(ㅡ), 사람(ㅣ)을 뜻하는 '천·지·인' 세 가지 기본 모음만 있으면 세상의 모든 모음을 조합해 만들 수 있습니다."
+            },
+            // 6단계: 천지인 합성 퍼즐 (직접 조립 퍼즐 #2)
+            {
+                type: "builder",
+                stage: "3단계 · 천지인의 원리",
+                badge: "모음 조립 미션",
+                question: "천지인 조각을 합쳐 모음 'ㅏ'를 만들어 보세요! (사람의 오른쪽에 하늘이 떠오르는 모양)",
+                hint: "서 있는 사람(ㅣ)과 둥근 하늘(ㆍ) 조각을 하나씩 선택하세요!",
+                targetDisplay: "목표 모음: [ ㅏ ] 만들기",
+                pieces: ["ㆍ", "ㅡ", "ㅣ", "ㆍ"],
+                correctSequence: ["ㅣ", "ㆍ"],
+                anyOrder: true,
+                resultPreview: "ㅣ + ㆍ = ㅏ",
+                explanation: "정답입니다! 사람(ㅣ)의 오른쪽에 하늘(ㆍ)을 붙이면 'ㅏ', 왼쪽에 붙이면 'ㅓ', 땅(ㅡ) 위에 붙이면 'ㅗ'가 되는 놀라운 규칙이에요!"
+            },
+            // 7단계: 초성+중성+종성 글자 완성 퍼즐 (직접 조립 퍼즐 #3)
+            {
+                type: "builder",
+                stage: "4단계 · 모아쓰기 원리",
+                badge: "음절 완성 미션",
+                question: "초성(첫소리) + 중성(가운뎃소리) + 종성(끝소리)을 순서대로 조립해 '한' 글자를 완성하세요!",
+                hint: "'ㅎ' + 'ㅏ' + 'ㄴ' 순서대로 조각을 눌러 조립해 보세요.",
+                targetDisplay: "목표 글자: [ 한 ] 완성하기",
+                pieces: ["ㄴ", "ㅏ", "ㅎ", "ㄱ", "ㅓ"],
+                correctSequence: ["ㅎ", "ㅏ", "ㄴ"],
+                resultPreview: "ㅎ + ㅏ + ㄴ = 한",
+                explanation: "훈민정음은 소리 나는 대로 초성·중성·종성을 한 글자 안에 네모반듯하게 모아쓰기 때문에 읽는 속도가 세계에서 가장 빠른 편에 속합니다!"
+            },
+            // 8단계: 최종 종합 문제 (객관식)
+            {
+                type: "choice",
+                stage: "최종 관문 · 훈민정음의 정신",
+                badge: "창제 목적",
+                question: "세종대왕께서 신하들의 반대에도 불구하고 훈민정음을 창제하신 가장 큰 까닭은 무엇인가요?",
+                hint: "훈민정음 서문(나랏말싸미 듕귁에 달아...)에 담긴 백성을 사랑하는 마음을 떠올려 보세요!",
+                visualSVG: `
+                    <div class="text-center space-y-1">
+                        <div class="text-2xl">👑 📜 💡</div>
+                        <div class="text-amber-300 font-bold text-sm sm:text-base">"백성을 가르치는 바른 소리"</div>
+                    </div>
+                `,
+                choices: [
+                    "글을 몰라 억울함을 겪는 백성들이 누구나 쉽게 익혀 쓰게 하려고",
+                    "양반과 학자들만 더 어려운 시험을 치르게 하려고",
+                    "우리나라 말을 없애고 다른 나라 말로 바꾸려고",
+                    "왕실의 보물창고에 숨겨 두고 혼자만 읽으려고"
+                ],
+                answer: "글을 몰라 억울함을 겪는 백성들이 누구나 쉽게 익혀 쓰게 하려고",
+                explanation: "완벽합니다! 훈민정음은 백성을 사랑하는 '애민 정신'과 세계 언어학자들이 극찬하는 '과학적 창제 원리'가 결합된 인류 최고의 문화유산입니다."
+            }
+        ];
+
+        // --- 게임 상태 변수 ---
+        let currentIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let isLocked = false;
+        let selectedPieces = [];
+
+        // DOM 요소
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const gameoverModal = document.getElementById('gameover-modal');
+
+        function startGame() {
+            initAudio();
+            playSound('click');
+            currentIndex = 0;
+            score = 0;
+            lives = 3;
+            combo = 0;
+            isLocked = false;
+
+            updateLivesUI();
+            updateComboUI();
+
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            gameoverModal.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function updateLivesUI() {
+            for (let i = 1; i <= 3; i++) {
+                const el = document.getElementById(`life-${i}`);
+                if (i <= lives) {
+                    el.textContent = "🏮";
+                    el.classList.remove('opacity-25', 'grayscale');
+                } else {
+                    el.textContent = "🕯️";
+                    el.classList.add('opacity-30', 'grayscale');
+                }
+            }
+        }
+
+        function updateComboUI() {
+            const comboBadge = document.getElementById('combo-badge');
+            if (combo >= 2) {
+                comboBadge.textContent = `🔥 ${combo}연속 정답!`;
+                comboBadge.classList.remove('hidden');
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+        }
+
+        function loadQuestion() {
+            isLocked = false;
+            selectedPieces = [];
+            const q = questions[currentIndex];
+
+            document.getElementById('stage-badge').textContent = `${currentIndex + 1}관문`;
+            document.getElementById('question-counter').textContent = `${currentIndex + 1} / ${questions.length}`;
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+
+            document.getElementById('stage-title').textContent = q.stage;
+            document.getElementById('mission-type-badge').textContent = q.badge;
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('hint-text').textContent = q.hint;
+
+            const visualBox = document.getElementById('visual-box');
+            const choicesGrid = document.getElementById('choices-grid');
+            const builderControls = document.getElementById('builder-controls');
+
+            if (q.type === "choice") {
+                // 객관식 모드
+                builderControls.classList.add('hidden');
+                choicesGrid.classList.remove('hidden');
+                visualBox.innerHTML = q.visualSVG;
+
+                choicesGrid.innerHTML = '';
+                const isLongText = q.choices[0].length > 10;
+                choicesGrid.className = isLongText ? "grid grid-cols-1 gap-3" : "grid grid-cols-2 gap-3 sm:gap-4";
+
+                q.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.className = `option-btn rounded-2xl p-4 font-bold text-white cursor-pointer flex items-center justify-center text-center ${isLongText ? 'text-sm sm:text-base py-3.5' : 'text-2xl sm:text-3xl py-5'}`;
+                    btn.textContent = choice;
+                    btn.onclick = () => handleChoiceAnswer(choice, btn);
+                    choicesGrid.appendChild(btn);
+                });
+            } else {
+                // 글자 조립 퍼즐 모드
+                choicesGrid.classList.add('hidden');
+                builderControls.classList.remove('hidden');
+                renderBuilderWorkspace();
+
+                const piecesContainer = document.getElementById('builder-pieces');
+                piecesContainer.innerHTML = '';
+                q.pieces.forEach((piece, idx) => {
+                    const btn = document.createElement('button');
+                    btn.id = `piece-btn-${idx}`;
+                    btn.className = "option-btn rounded-xl py-3.5 px-2 text-xl sm:text-2xl font-extrabold text-amber-300 cursor-pointer";
+                    btn.textContent = piece;
+                    btn.onclick = () => selectBuilderPiece(piece, idx, btn);
+                    piecesContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // 조립 작업대 화면 갱신
+        function renderBuilderWorkspace() {
+            const q = questions[currentIndex];
+            const visualBox = document.getElementById('visual-box');
+            const slotsHTML = q.correctSequence.map((_, i) => {
+                const val = selectedPieces[i];
+                if (val) {
+                    return `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-amber-300 animate-pop">${val}</div>`;
+                } else {
+                    return `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-800/80 border-2 border-dashed border-slate-600 flex items-center justify-center text-sm text-slate-500 font-bold">${i + 1}번 조각</div>`;
+                }
+            }).join('<span class="text-xl font-bold text-slate-500">+</span>');
+
+            visualBox.innerHTML = `
+                <div class="text-xs sm:text-sm font-bold text-emerald-400 mb-3">${q.targetDisplay}</div>
+                <div class="flex items-center justify-center gap-2 sm:gap-3">${slotsHTML}</div>
+            `;
+        }
+
+        function selectBuilderPiece(piece, idx, btn) {
+            if (isLocked) return;
+            const q = questions[currentIndex];
+            if (selectedPieces.length >= q.correctSequence.length) return;
+
+            playSound('piece');
+            selectedPieces.push(piece);
+            btn.disabled = true;
+            btn.classList.add('opacity-30', 'cursor-not-allowed');
+            renderBuilderWorkspace();
+        }
+
+        function clearBuilder() {
+            if (isLocked) return;
+            playSound('click');
+            selectedPieces = [];
+            const q = questions[currentIndex];
+            q.pieces.forEach((_, idx) => {
+                const btn = document.getElementById(`piece-btn-${idx}`);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-30', 'cursor-not-allowed');
+                }
+            });
+            renderBuilderWorkspace();
+        }
+
+        function submitBuilder() {
+            if (isLocked) return;
+            const q = questions[currentIndex];
+            if (selectedPieces.length < q.correctSequence.length) {
+                triggerWrongFeedback("조각을 모두 채워주세요!");
+                return;
+            }
+
+            let isCorrect = false;
+            if (q.anyOrder) {
+                const sortedSel = [...selectedPieces].sort().join(',');
+                const sortedAns = [...q.correctSequence].sort().join(',');
+                isCorrect = sortedSel === sortedAns;
+            } else {
+                isCorrect = selectedPieces.join(',') === q.correctSequence.join(',');
+            }
+
+            if (isCorrect) {
+                handleSuccess();
+            } else {
+                handleMistake();
+                clearBuilder();
+            }
+        }
+
+        function handleChoiceAnswer(choice, btn) {
+            if (isLocked) return;
+            const q = questions[currentIndex];
+
+            if (choice === q.answer) {
+                btn.classList.add('!bg-emerald-500/20', '!border-emerald-400', '!text-emerald-300');
+                handleSuccess();
+            } else {
+                btn.classList.add('!bg-rose-500/20', '!border-rose-500', '!text-rose-300');
+                btn.disabled = true;
+                handleMistake();
+            }
+        }
+
+        function handleSuccess() {
+            isLocked = true;
+            playSound('correct');
+            combo++;
+            const comboBonus = combo >= 2 ? (combo - 1) * 25 : 0;
+            const gained = 100 + comboBonus;
+            score += gained;
+
+            document.getElementById('score-display').textContent = score;
+            updateComboUI();
+
+            const q = questions[currentIndex];
+            document.getElementById('feedback-title').textContent = "정답입니다! 원리를 꿰뚫었군요!";
+            document.getElementById('bonus-text').textContent = comboBonus > 0
+                ? `+100점 (연속 정답 보너스 +${comboBonus}점!)`
+                : "+100점 획득!";
+            document.getElementById('feedback-explanation').textContent = q.explanation;
+
+            setTimeout(() => {
+                feedbackModal.classList.remove('hidden');
+            }, 250);
+        }
+
+        function handleMistake() {
+            playSound('wrong');
+            combo = 0;
+            lives--;
+            updateComboUI();
+            updateLivesUI();
+
+            const qBox = document.getElementById('question-box');
+            qBox.classList.remove('animate-shake');
+            void qBox.offsetWidth;
+            qBox.classList.add('animate-shake');
+
+            if (lives <= 0) {
+                isLocked = true;
+                setTimeout(() => {
+                    gameoverModal.classList.remove('hidden');
+                }, 400);
+            }
+        }
+
+        function triggerWrongFeedback(msg) {
+            playSound('wrong');
+            const qBox = document.getElementById('question-box');
+            qBox.classList.remove('animate-shake');
+            void qBox.offsetWidth;
+            qBox.classList.add('animate-shake');
+            document.getElementById('hint-text').textContent = msg;
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            feedbackModal.classList.add('hidden');
+            currentIndex++;
+
+            if (currentIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            playSound('fanfare');
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-lives').textContent = "🏮".repeat(lives) + "🕯️".repeat(3 - lives);
+
+            const rankTitle = document.getElementById('rank-title');
+            if (lives === 3 && score >= 950) {
+                rankTitle.textContent = "👑 최고 등급: 세종대왕 수제자 · 집현전 대제학";
+            } else if (lives >= 2) {
+                rankTitle.textContent = "📜 우수 등급: 집현전 정예 학자";
+            } else {
+                rankTitle.textContent = "✨ 통과 등급: 훈민정음 수호자";
+            }
+        }
+
+        function copyPassword() {
+            const tempInput = document.createElement('input');
+            tempInput.value = '훈민정음';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            playSound('piece');
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.textContent = "✅ '훈민정음' 복사 완료! ZEP에 붙여넣으세요";
+            copyBtn.classList.add('border-emerald-400', 'text-emerald-300');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
